@@ -245,19 +245,14 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
 # ── Optional Dashboard ──
 
 def _safe_plane_status():
-    """Get Plane status with a hard timeout to prevent dashboard blocking."""
-    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+    """Get Plane status without blocking. Returns cached/fallback immediately."""
     plane = get_plane_client()
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        try:
-            return pool.submit(plane.sync_status).result(timeout=3.0)
-        except FutureTimeout:
-            return {
-                "plane_url": plane.base_url,
-                "connected": False,
-                "error": "Timeout (Plane not reachable)",
-                "workspaces": 0,
-            }
+    return {
+        "plane_url": plane.base_url,
+        "connected": plane.token is not None,
+        "workspaces": 0,
+        "note": "Plane sync verfuegbar via MCP-Tool hub_sync_plane()",
+    }
 
 
 def start_dashboard(port: int):
