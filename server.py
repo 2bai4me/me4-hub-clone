@@ -244,6 +244,22 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
 
 # ── Optional Dashboard ──
 
+def _safe_plane_status():
+    """Get Plane status with a hard timeout to prevent dashboard blocking."""
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+    plane = get_plane_client()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        try:
+            return pool.submit(plane.sync_status).result(timeout=3.0)
+        except FutureTimeout:
+            return {
+                "plane_url": plane.base_url,
+                "connected": False,
+                "error": "Timeout (Plane not reachable)",
+                "workspaces": 0,
+            }
+
+
 def start_dashboard(port: int):
     """Start a lightweight HTTP dashboard in a background thread."""
     global DASHBOARD_PORT
@@ -256,9 +272,8 @@ def start_dashboard(port: int):
             def do_GET(self):
                 if self.path == "/" or self.path == "/index.html":
                     registry = get_registry()
-                    plane = get_plane_client()
                     agents = registry.get_status_all()
-                    plane_status = plane.sync_status()
+                    plane_status = _safe_plane_status()
                     html = render_dashboard(
                         agents_data=agents,
                         plane_data=plane_status,
@@ -272,10 +287,9 @@ def start_dashboard(port: int):
                     self.wfile.write(html.encode("utf-8"))
                 elif self.path == "/api/status":
                     registry = get_registry()
-                    plane = get_plane_client()
                     data = {
                         "agents": registry.get_status_all(),
-                        "plane": plane.sync_status(),
+                        "plane": _safe_plane_status(),
                         "uptime": time.time() - start_time,
                     }
                     body = json.dumps(data, indent=2, ensure_ascii=False)
