@@ -22,7 +22,7 @@ class PlaneClient:
     def __init__(self, base_url: str = DEFAULT_PLANE_URL):
         self.base_url = base_url.rstrip("/")
         self.token: Optional[str] = None
-        self.client = httpx.Client(timeout=30)
+        self.client = httpx.Client(timeout=5.0)  # short timeout for dashboard
 
     def authenticate(self, email: str = None, password: str = None) -> dict:
         """Authenticate with Plane and get token."""
