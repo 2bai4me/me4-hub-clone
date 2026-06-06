@@ -66,7 +66,7 @@ DASHBOARD_TEMPLATE = """
     <div class="header">
         <h1>🛰️ {t_app_name}</h1>
         <p>{t_app_tagline}</p>
-        <div class="refresh">{t_dashboard_refresh} | auto-refresh alle 30s</div>
+        <div class="refresh">{t_dashboard_refresh}</div>
     </div>
 
     <div class="grid">
@@ -164,7 +164,6 @@ def render_dashboard(
     if not agents:
         agent_cards = f'<p style="color:#8b949e; text-align:center; padding:20px;">{i18n.t("dashboard.agent_list.empty")}</p>'
     else:
-        heartbeat_label = _("dashboard.heartbeat_label")
         for a in agents:
             status = a.get("status", "unknown")
             badge_class = f"badge-{status}"
@@ -250,27 +249,15 @@ def render_dashboard(
     html = html.replace("{{ refresh_time }}", time.strftime("%H:%M:%S"))
     html = html.replace("{{ total_agents }}", str(agents_data.get("total", 0)))
     html = html.replace("{{ online_count }}", str(agents_data.get("online", 0)))
+    html = html.replace("{{ dashboard_port }}", str(dashboard_port))
     html = html.replace("{{ offline_count }}", str(agents_data.get("offline", 0)))
-    html = html.replace("{{ agents_title }}", _("dashboard.agents_title"))
-    html = html.replace("{{ total_registered }}", _("dashboard.total_registered"))
-    html = html.replace("{{ online_label }}", _("dashboard.online"))
-    html = html.replace("{{ offline_label }}", _("dashboard.offline"))
     html = html.replace("{{ agent_cards }}", agent_cards)
     html = html.replace("{{ plane_url }}", plane_url)
-    html = html.replace("{{ plane_url_label }}", _("dashboard.plane_url"))
-    html = html.replace("{{ connection_label }}", _("dashboard.connection"))
     html = html.replace("{{ plane_connected_class }}", plane_connected_class)
     html = html.replace("{{ plane_connected_text }}", plane_connected_text)
     html = html.replace("{{ plane_workspaces }}", str(plane_workspaces))
-    html = html.replace("{{ workspaces_label }}", _("dashboard.workspaces"))
-    html = html.replace("{{ plane_title }}", _("dashboard.plane_title"))
     html = html.replace("{{ plane_projects_html }}", plane_projects_html)
     html = html.replace("{{ uptime }}", uptime_str)
-    html = html.replace("{{ system_title }}", _("dashboard.system_title"))
-    html = html.replace("{{ hub_version_label }}", _("dashboard.hub_version"))
-    html = html.replace("{{ server_uptime_label }}", _("dashboard.server_uptime"))
-    html = html.replace("{{ mcp_transport_label }}", _("dashboard.mcp_transport"))
-    html = html.replace("{{ dashboard_port_label }}", _("dashboard.dashboard_port"))
     html = html.replace("{{ dashboard_port }}", str(dashboard_port))
 
     return html
