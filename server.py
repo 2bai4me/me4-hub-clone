@@ -24,6 +24,7 @@ import me4_i18n as i18n
 from hub_core import get_registry, AgentInfo
 from plane_client import get_plane_client
 from dashboard import render_dashboard
+from i18n_helper import _, set_locale, parse_accept_language
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("me4-hub.server")
@@ -253,7 +254,7 @@ def _safe_plane_status():
         "plane_url": plane.base_url,
         "connected": plane.token is not None,
         "workspaces": 0,
-        "note": "Plane sync verfuegbar via MCP-Tool hub_sync_plane()",
+        "note": _("server.plane_sync_note"),
     }
 
 
@@ -317,22 +318,19 @@ def start_dashboard(port: int):
                     self.send_response(404)
                     self.end_headers()
 
-            def log_message(self, format, *args):
-                logger.debug(f"Dashboard: {format % args}")
-
         server = HTTPServer(("0.0.0.0", port), DashboardHandler)
-        logger.info(f"📊 Dashboard gestartet auf http://localhost:{port}")
+        logger.info(_("server.dashboard_started", port=port))
         server.serve_forever()
 
     except Exception as e:
-        logger.error(f"Dashboard konnte nicht gestartet werden: {e}")
+        logger.error(_("server.dashboard_start_failed", error=str(e)))
 
 
 # ── Main Entry Points ──
 
 async def run_mcp():
     """Run the MCP server over stdio."""
-    logger.info("🚀 ME4 Kommunikations-Hub MCP Server startet (stdio)")
+    logger.info(_("server.mcp_starting"))
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
@@ -355,7 +353,7 @@ def main():
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info("Dashboard gestoppt.")
+            logger.info(_("server.dashboard_stopped"))
         return
 
     if args.dashboard:
