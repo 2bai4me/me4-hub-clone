@@ -253,7 +253,7 @@ def _safe_plane_status():
         "plane_url": plane.base_url,
         "connected": plane.token is not None,
         "workspaces": 0,
-        "note": _("server.plane_sync_note"),
+        "note": i18n.t("server.plane_sync_note"),
     }
 
 
@@ -318,18 +318,18 @@ def start_dashboard(port: int):
                     self.end_headers()
 
         server = HTTPServer(("0.0.0.0", port), DashboardHandler)
-        logger.info(_("server.dashboard_started", port=port))
+        logger.info(i18n.t("server.log.dashboard_started", port=port))
         server.serve_forever()
 
     except Exception as e:
-        logger.error(_("server.dashboard_start_failed", error=str(e)))
+        logger.error(i18n.t("server.log.dashboard_start_failed", error=str(e)))
 
 
 # ── Main Entry Points ──
 
 async def run_mcp():
     """Run the MCP server over stdio."""
-    logger.info(_("server.mcp_starting"))
+    logger.info(i18n.t("server.log.mcp_starting"))
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
@@ -340,9 +340,9 @@ def main():
     i18n.init(str(locales_dir), default_locale="de")
     logger.info(f"i18n initialized: {i18n.get_manager().get_available_locales()} (default: {i18n.get_locale()})")
 
-    parser = argparse.ArgumentParser(description="ME4 Kommunikations-Hub MCP Server")
-    parser.add_argument("--dashboard", type=int, metavar="PORT", help="Dashboard auf angegebenem Port starten")
-    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help="NUR Dashboard starten (kein MCP)")
+    parser = argparse.ArgumentParser(description=i18n.t("server.argparse.description"))
+    parser.add_argument("--dashboard", type=int, metavar="PORT", help=i18n.t("server.argparse.dashboard_help"))
+    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help=i18n.t("server.argparse.dashboard_only_help"))
     args = parser.parse_args()
 
     if args.dashboard_only:
@@ -352,7 +352,7 @@ def main():
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info(_("server.dashboard_stopped"))
+            logger.info(i18n.t("server.log.dashboard_stopped"))
         return
 
     if args.dashboard:

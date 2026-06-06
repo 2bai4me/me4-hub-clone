@@ -98,5 +98,25 @@
     "agentNotFound": "Agent nicht gefunden",
     "unknownAgent": "Unbekannter Agent",
     "dashboardNotRunning": "Dashboard läuft nicht. Server mit --dashboard PORT starten."
+  },
+  "server": {
+    "plane_sync_note": "Sync-Status wird im Hintergrund aktualisiert",
+    "argparse": {
+      "description": "ME4 Kommunikations-Hub MCP Server",
+      "dashboard_help": "Dashboard auf angegebenem Port starten",
+      "dashboard_only_help": "NUR Dashboard starten (kein MCP)"
+    },
+    "log": {
+      "dashboard_started": "Dashboard gestartet auf Port {port}",
+      "dashboard_start_failed": "Dashboard-Start fehlgeschlagen: {error}",
+      "mcp_starting": "MCP-Server wird gestartet",
+      "dashboard_stopped": "Dashboard gestoppt"
+    }
+  },
+  "hub": {
+    "log": {
+      "state_load_error": "Konnte Zustandsdatei nicht laden: {error}",
+      "agent_registered": "Agent registriert: {id} ({type})"
+    }
   }
 }

@@ -45,7 +45,7 @@ class HubRegistry:
                     agent = AgentInfo(**a)
                     self.agents[agent.agent_id] = agent
             except Exception as e:
-                logger.warning(f"Could not load state: {e}")
+                logger.warning(i18n.t("hub.log.state_load_error", error=str(e)))
 
     def _save_state(self):
         data = {"agents": [asdict(a) for a in self.agents.values()]}
@@ -55,7 +55,7 @@ class HubRegistry:
         """Register a new agent or update existing."""
         self.agents[info.agent_id] = info
         self._save_state()
-        logger.info(f"Registered agent: {info.agent_id} ({info.agent_type})")
+        logger.info(i18n.t("hub.log.agent_registered", id=info.agent_id, type=info.agent_type))
         return {"registered": True, "agent_id": info.agent_id, "total_agents": len(self.agents)}
 
     def unregister(self, agent_id: str) -> dict:
