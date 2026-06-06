@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass, field, asdict
 
+from i18n import t, _
+
 logger = logging.getLogger("me4-hub")
 
 STATE_FILE = Path(__file__).parent / "hub_state.json"
@@ -42,8 +44,9 @@ class HubRegistry:
                 for a in data.get("agents", []):
                     agent = AgentInfo(**a)
                     self.agents[agent.agent_id] = agent
+                logger.info(_("agent.state_loaded", file=str(STATE_FILE)))
             except Exception as e:
-                logger.warning(f"Could not load state: {e}")
+                logger.warning(_("agent.state_load_error", error=e))
 
     def _save_state(self):
         data = {"agents": [asdict(a) for a in self.agents.values()]}
@@ -53,7 +56,7 @@ class HubRegistry:
         """Register a new agent or update existing."""
         self.agents[info.agent_id] = info
         self._save_state()
-        logger.info(f"Registered agent: {info.agent_id} ({info.agent_type})")
+        logger.info(_("agent.registered", agent_id=info.agent_id, agent_type=info.agent_type))
         return {"registered": True, "agent_id": info.agent_id, "total_agents": len(self.agents)}
 
     def unregister(self, agent_id: str) -> dict:
@@ -61,8 +64,9 @@ class HubRegistry:
         if agent_id in self.agents:
             del self.agents[agent_id]
             self._save_state()
-            return {"unregistered": True, "agent_id": agent_id}
-        return {"unregistered": False, "error": "Agent not found"}
+            logger.info(_("agent.unregistered", agent_id=agent_id))
+            return {"unregistered": True, "agent_id": agent_id, "message": _("agent.unregistered", agent_id=agent_id)}
+        return {"unregistered": False, "error": "not_found", "message": _("agent.not_found", agent_id=agent_id)}
 
     def heartbeat(self, agent_id: str) -> dict:
         """Update heartbeat timestamp."""
@@ -70,8 +74,9 @@ class HubRegistry:
             self.agents[agent_id].last_heartbeat = time.time()
             self.agents[agent_id].status = "online"
             self._save_state()
-            return {"heartbeat": "ok", "agent_id": agent_id}
-        return {"heartbeat": "error", "message": "Unknown agent"}
+            logger.debug(_("agent.heartbeat_ok", agent_id=agent_id))
+            return {"heartbeat": "ok", "agent_id": agent_id, "message": _("agent.heartbeat_ok", agent_id=agent_id)}
+        return {"heartbeat": "error", "agent_id": agent_id, "message": _("agent.heartbeat_error", agent_id=agent_id)}
 
     def get_status_all(self) -> dict:
         """Get status of all registered agents."""
