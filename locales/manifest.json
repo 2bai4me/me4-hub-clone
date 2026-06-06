@@ -1,0 +1,5 @@
+{
+  "default_locale": "de",
+  "fallback_chain": ["pt", "en", "de"],
+  "available": ["de", "en", "pt"]
+}

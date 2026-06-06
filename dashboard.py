@@ -1,18 +1,20 @@
 """
 ME4 Kommunikations-Hub — Status Dashboard
 Web UI showing agent status, Plane sync, and hub health.
-All user-facing strings are localized via i18n (DE/EN).
+Uses me4-i18n for multi-language support (de, en, pt).
 """
 
+import json
 import time
-from i18n import t, set_language, _, format_heartbeat_age
+import me4_i18n as i18n
+from pathlib import Path
 
-DASHBOARD_TEMPLATE = """<!DOCTYPE html>
-<html lang="{html_lang}">
+DASHBOARD_TEMPLATE = """
+<html lang="{lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{page_title}</title>
+    <title>{t_app_name}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }}
@@ -47,74 +49,83 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
         .summary-box .big {{ font-size: 32px; font-weight: 700; }}
         .progress-bar {{ height: 8px; background: #21262d; border-radius: 4px; margin-top: 8px; overflow: hidden; }}
         .progress-fill {{ height: 100%; border-radius: 4px; transition: width 0.5s; }}
+        .lang-switcher {{ position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; }}
+        .lang-btn {{ background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-decoration: none; }}
+        .lang-btn.active {{ background: #1f6feb; color: #ffffff; border-color: #1f6feb; }}
+        .lang-btn:hover {{ background: #30363d; color: #c9d1d9; }}
         @keyframes pulse {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.5; }} }}
         .live {{ animation: pulse 2s infinite; }}
     </style>
 </head>
 <body>
+    <div class="lang-switcher">
+        <a href="?lang=de" class="lang-btn {de_active}">DE</a>
+        <a href="?lang=en" class="lang-btn {en_active}">EN</a>
+        <a href="?lang=pt" class="lang-btn {pt_active}">PT</a>
+    </div>
     <div class="header">
-        <h1>{page_title}</h1>
-        <p>{page_subtitle}</p>
-        <div class="refresh">{refresh_label}: <span id="refreshTime">{refresh_time}</span> | {auto_refresh}</div>
+        <h1>🛰️ {t_app_name}</h1>
+        <p>{t_app_tagline}</p>
+        <div class="refresh">{t_dashboard_refresh}</div>
     </div>
 
     <div class="grid">
         <!-- Agent Status Card -->
         <div class="card">
-            <h2>{agents_title}</h2>
+            <h2>🤖 {t_dashboard_title}</h2>
             <div class="stat-row">
-                <span class="stat-label">{total_label}</span>
-                <span class="stat-value">{total_agents}</span>
+                <span class="stat-label">{t_stats_total}</span>
+                <span class="stat-value">{{ total_agents }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{online_label}</span>
-                <span class="stat-value online">{online_count}</span>
+                <span class="stat-label">{t_stats_online}</span>
+                <span class="stat-value online">{{ online_count }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{offline_label}</span>
-                <span class="stat-value offline">{offline_count}</span>
+                <span class="stat-label">{t_stats_offline}</span>
+                <span class="stat-value offline">{{ offline_count }}</span>
             </div>
             <div style="margin-top: 16px;">
-                {agent_cards}
+                {{ agent_cards }}
             </div>
         </div>
 
         <!-- Plane Sync Card -->
         <div class="card">
-            <h2>{plane_title}</h2>
+            <h2>📋 {t_plane_title}</h2>
             <div class="stat-row">
-                <span class="stat-label">{plane_url_label}</span>
-                <span class="stat-value">{plane_url}</span>
+                <span class="stat-label">{t_plane_url_label}</span>
+                <span class="stat-value">{{ plane_url }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{connection_label}</span>
-                <span class="stat-value {plane_connected_class}">{plane_conn_text}</span>
+                <span class="stat-label">{t_plane_connection}</span>
+                <span class="stat-value {{ plane_connected_class }}">{{ plane_connected_text }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{workspaces_label}</span>
-                <span class="stat-value">{plane_workspaces}</span>
+                <span class="stat-label">{t_plane_workspaces}</span>
+                <span class="stat-value">{{ plane_workspaces }}</span>
             </div>
-            {plane_projects_html}
+            {{ plane_projects_html }}
         </div>
 
         <!-- System Card -->
         <div class="card">
-            <h2>{system_title}</h2>
+            <h2>⚙️ {t_system_title}</h2>
             <div class="stat-row">
-                <span class="stat-label">{version_label}</span>
+                <span class="stat-label">{t_system_version}</span>
                 <span class="stat-value">1.0.0</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{uptime_label}</span>
-                <span class="stat-value">{uptime}</span>
+                <span class="stat-label">{t_system_uptime}</span>
+                <span class="stat-value">{{ uptime }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{transport_label}</span>
+                <span class="stat-label">{t_system_transport}</span>
                 <span class="stat-value">stdio</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">{port_label}</span>
-                <span class="stat-value">{dashboard_port}</span>
+                <span class="stat-label">{t_system_port}</span>
+                <span class="stat-value">{{ dashboard_port }}</span>
             </div>
         </div>
     </div>
@@ -133,128 +144,120 @@ def render_dashboard(
     dashboard_port: int = 8088,
     lang: str = "de",
 ) -> str:
-    """Render the full dashboard HTML in the requested language.
+    """Render the full dashboard HTML with i18n support."""
 
-    Args:
-        agents_data: Output from HubRegistry.get_status_all()
-        plane_data: Output from PlaneClient.sync_status()
-        uptime_seconds: Server uptime in seconds
-        dashboard_port: Port the dashboard is running on
-        lang: ISO 639-1 language code ('de' or 'en')
-    """
-    # Set language for this render
-    set_language(lang)
+    # Auto-initialize i18n if not already done (standalone use)
+    if i18n.get_manager() is None:
+        locales_dir = Path(__file__).parent / "locales"
+        i18n.init(str(locales_dir), default_locale="de")
 
-    # ── Compute all translatable UI strings ──
-    page_title = _("dashboard.title")
-    page_subtitle = _("hub.subtitle")
-    refresh_label = _("dashboard.refresh_label")
-    auto_refresh = _("dashboard.auto_refresh")
-    agents_title = _("agent.title")
-    total_label = _("agent.total_registered")
-    online_label = _("agent.online")
-    offline_label = _("agent.offline")
-    no_agents = _("agent.no_agents")
-    plane_title = _("plane.title")
-    plane_url_label = _("plane.url")
-    connection_label = _("plane.connection")
-    plane_connected_text = _("plane.connected")
-    plane_disconnected_text = _("plane.disconnected")
-    workspaces_label = _("plane.workspaces")
-    system_title = _("system.title")
-    version_label = _("hub.version")
-    uptime_label = _("hub.server_uptime")
-    transport_label = _("hub.mcp_transport")
-    port_label = _("hub.dashboard_port")
+    # Set locale for this request
+    if lang in i18n.get_manager().get_available_locales():
+        i18n.set_locale(lang)
+    else:
+        i18n.set_locale("de")
+        lang = "de"
 
-    # ── Agent cards ──
+    # Agent cards
     agent_cards = ""
     agents = agents_data.get("agents", [])
     if not agents:
-        agent_cards = (
-            f'<p style="color:#8b949e; text-align:center; padding:20px;">'
-            f'{no_agents}</p>'
-        )
+        agent_cards = f'<p style="color:#8b949e; text-align:center; padding:20px;">{i18n.t("dashboard.agent_list.empty")}</p>'
     else:
         for a in agents:
             status = a.get("status", "unknown")
             badge_class = f"badge-{status}"
-            status_text = _("agent.status." + status)
-            ago = format_heartbeat_age(a.get("seconds_since_heartbeat"), lang=lang)
+            # Translate status
+            status_text = i18n.t(f"status.{status}")
 
-            agent_cards += (
-                f'\n            <div class="agent-card">\n'
-                f'                <div class="agent-header">\n'
-                f'                    <span class="agent-name">'
-                f'{a.get("display_name", a.get("agent_id", "?"))}</span>\n'
-                f'                    <span class="badge {badge_class}">'
-                f'{status_text}</span>\n'
-                f'                </div>\n'
-                f'                <div class="agent-meta">\n'
-                f'                    <span>{a.get("agent_type", "?")}</span>\n'
-                f'                    <span>Heartbeat: {ago}</span>\n'
-                f'                </div>\n'
-                f'            </div>'
-            )
+            heartbeat = a.get("seconds_since_heartbeat")
+            heartbeat_label = i18n.t("agent.heartbeat_label")
+            if heartbeat is not None:
+                if heartbeat < 60:
+                    ago = i18n.t("dashboard.agent_list.heartbeat_ago_seconds", seconds=int(heartbeat))
+                elif heartbeat < 3600:
+                    ago = i18n.t("dashboard.agent_list.heartbeat_ago_minutes", minutes=int(heartbeat / 60))
+                else:
+                    ago = i18n.t("dashboard.agent_list.heartbeat_ago_hours", hours=int(heartbeat / 3600))
+            else:
+                ago = i18n.t("dashboard.agent_list.heartbeat_never")
 
-    # ── Plane section ──
+            agent_cards += f"""
+            <div class="agent-card">
+                <div class="agent-header">
+                    <span class="agent-name">{a.get('display_name', a.get('agent_id', '?'))}</span>
+                    <span class="badge {badge_class}">{status_text}</span>
+                </div>
+                <div class="agent-meta">
+                    <span>{a.get('agent_type', '?')}</span>
+                    <span>{heartbeat_label}: {ago}</span>
+                </div>
+            </div>"""
+
+    # Plane section
     plane_connected = plane_data.get("connected", False)
     plane_connected_class = "online" if plane_connected else "offline"
-    plane_conn_text = plane_connected_text if plane_connected else plane_disconnected_text
+    plane_connected_text = i18n.t("plane.connected") if plane_connected else i18n.t("plane.disconnected")
     plane_url = plane_data.get("plane_url", "N/A")
     plane_workspaces = plane_data.get("workspaces", "0")
 
-    # Workspace list
     plane_projects_html = ""
     wl = plane_data.get("workspace_list", [])
     if wl:
         for w in wl:
-            plane_projects_html += (
-                f'\n            <div class="plane-project" style="margin-top:12px;">\n'
-                f'                <strong>{w.get("name")}</strong>\n'
-                f'                <span style="color:#8b949e;font-size:12px;'
-                f'margin-left:8px;">({w.get("slug")})</span>\n'
-                f'            </div>'
-            )
+            plane_projects_html += f"""
+            <div class="plane-project" style="margin-top:12px;">
+                <strong>{w.get('name')}</strong>
+                <span style="color:#8b949e;font-size:12px;margin-left:8px;">({w.get('slug')})</span>
+            </div>"""
 
-    # ── Uptime formatting ──
+    # Uptime formatting
     h = int(uptime_seconds // 3600)
     m = int((uptime_seconds % 3600) // 60)
     s = int(uptime_seconds % 60)
     uptime_str = f"{h}h {m}m {s}s"
 
-    # ── Assemble HTML ──
-    html = DASHBOARD_TEMPLATE.format(
-        html_lang=lang,
-        page_title=page_title,
-        page_subtitle=page_subtitle,
-        refresh_label=refresh_label,
-        refresh_time=time.strftime("%H:%M:%S"),
-        auto_refresh=auto_refresh,
-        agents_title=agents_title,
-        total_label=total_label,
-        total_agents=agents_data.get("total", 0),
-        online_label=online_label,
-        online_count=agents_data.get("online", 0),
-        offline_label=offline_label,
-        offline_count=agents_data.get("offline", 0),
-        agent_cards=agent_cards,
-        plane_title=plane_title,
-        plane_url_label=plane_url_label,
-        plane_url=plane_url,
-        connection_label=connection_label,
-        plane_connected_class=plane_connected_class,
-        plane_conn_text=plane_conn_text,
-        workspaces_label=workspaces_label,
-        plane_workspaces=plane_workspaces,
-        plane_projects_html=plane_projects_html,
-        system_title=system_title,
-        version_label=version_label,
-        uptime_label=uptime_label,
-        uptime=uptime_str,
-        transport_label=transport_label,
-        port_label=port_label,
-        dashboard_port=dashboard_port,
-    )
+    # Refresh time with translation
+    refresh_text = i18n.t("dashboard.refresh", time=time.strftime("%H:%M:%S"))
+
+    # Build language switcher classes
+    de_active = "active" if lang == "de" else ""
+    en_active = "active" if lang == "en" else ""
+    pt_active = "active" if lang == "pt" else ""
+
+    html = DASHBOARD_TEMPLATE
+    html = html.replace("{lang}", lang)
+    html = html.replace("{de_active}", de_active)
+    html = html.replace("{en_active}", en_active)
+    html = html.replace("{pt_active}", pt_active)
+    html = html.replace("{t_app_name}", i18n.t("app.name"))
+    html = html.replace("{t_app_tagline}", i18n.t("app.tagline"))
+    html = html.replace("{t_dashboard_refresh}", refresh_text)
+    html = html.replace("{t_dashboard_title}", i18n.t("dashboard.title"))
+    html = html.replace("{t_stats_total}", i18n.t("dashboard.stats.total_registered"))
+    html = html.replace("{t_stats_online}", i18n.t("dashboard.stats.online"))
+    html = html.replace("{t_stats_offline}", i18n.t("dashboard.stats.offline"))
+    html = html.replace("{t_plane_title}", i18n.t("plane.title"))
+    html = html.replace("{t_plane_url_label}", i18n.t("plane.url_label"))
+    html = html.replace("{t_plane_connection}", i18n.t("plane.connection"))
+    html = html.replace("{t_plane_workspaces}", i18n.t("plane.workspaces"))
+    html = html.replace("{t_system_title}", i18n.t("system.title"))
+    html = html.replace("{t_system_version}", i18n.t("system.hub_version"))
+    html = html.replace("{t_system_uptime}", i18n.t("system.server_uptime"))
+    html = html.replace("{t_system_transport}", i18n.t("system.mcp_transport"))
+    html = html.replace("{t_system_port}", i18n.t("system.dashboard_port"))
+    html = html.replace("{{ refresh_time }}", time.strftime("%H:%M:%S"))
+    html = html.replace("{{ total_agents }}", str(agents_data.get("total", 0)))
+    html = html.replace("{{ online_count }}", str(agents_data.get("online", 0)))
+    html = html.replace("{{ dashboard_port }}", str(dashboard_port))
+    html = html.replace("{{ offline_count }}", str(agents_data.get("offline", 0)))
+    html = html.replace("{{ agent_cards }}", agent_cards)
+    html = html.replace("{{ plane_url }}", plane_url)
+    html = html.replace("{{ plane_connected_class }}", plane_connected_class)
+    html = html.replace("{{ plane_connected_text }}", plane_connected_text)
+    html = html.replace("{{ plane_workspaces }}", str(plane_workspaces))
+    html = html.replace("{{ plane_projects_html }}", plane_projects_html)
+    html = html.replace("{{ uptime }}", uptime_str)
+    html = html.replace("{{ dashboard_port }}", str(dashboard_port))
 
     return html

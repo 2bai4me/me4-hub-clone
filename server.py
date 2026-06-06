@@ -14,15 +14,16 @@ import logging
 import argparse
 import threading
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 
+import me4_i18n as i18n
 from hub_core import get_registry, AgentInfo
 from plane_client import get_plane_client
 from dashboard import render_dashboard
-from i18n import t, set_language, detect_language_from_header, detect_language_from_env, _
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("me4-hub.server")
@@ -42,96 +43,96 @@ DASHBOARD_PORT = None
 async def list_tools() -> list[types.Tool]:
     return [
         types.Tool(
-            name=_("tool.hub_status_all.name"),
-            description=_("tool.hub_status_all.desc"),
+            name="hub_status_all",
+            description=i18n.t("mcp.tools.hubStatusAll.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
             },
         ),
         types.Tool(
-            name=_("tool.hub_sync_plane.name"),
-            description=_("tool.hub_sync_plane.desc"),
+            name="hub_sync_plane",
+            description=i18n.t("mcp.tools.hubSyncPlane.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "workspace_slug": {
                         "type": "string",
-                        "description": _("tool.param.workspace_slug"),
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.workspaceSlug"),
                     },
                     "project_id": {
                         "type": "string",
-                        "description": _("tool.param.project_id"),
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.projectId"),
                     },
                     "state": {
                         "type": "string",
-                        "description": _("tool.param.state"),
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.state"),
                     },
                 },
             },
         ),
         types.Tool(
-            name=_("tool.hub_register_agent.name"),
-            description=_("tool.hub_register_agent.desc"),
+            name="hub_register_agent",
+            description=i18n.t("mcp.tools.hubRegisterAgent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": _("tool.param.agent_id"),
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.agentId"),
                     },
                     "agent_type": {
                         "type": "string",
-                        "description": _("tool.param.agent_type"),
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.agentType"),
                     },
                     "display_name": {
                         "type": "string",
-                        "description": _("tool.param.display_name"),
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.displayName"),
                     },
                     "endpoint": {
                         "type": "string",
-                        "description": _("tool.param.endpoint"),
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.endpoint"),
                     },
                     "capabilities": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": _("tool.param.capabilities"),
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.capabilities"),
                     },
                 },
                 "required": ["agent_id", "agent_type", "display_name"],
             },
         ),
         types.Tool(
-            name=_("tool.hub_heartbeat.name"),
-            description=_("tool.hub_heartbeat.desc"),
+            name="hub_heartbeat",
+            description=i18n.t("mcp.tools.hubHeartbeat.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": _("tool.param.agent_id"),
+                        "description": i18n.t("mcp.tools.hubHeartbeat.params.agentId"),
                     },
                 },
                 "required": ["agent_id"],
             },
         ),
         types.Tool(
-            name=_("tool.hub_unregister_agent.name"),
-            description=_("tool.hub_unregister_agent.desc"),
+            name="hub_unregister_agent",
+            description=i18n.t("mcp.tools.hubUnregisterAgent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": _("tool.param.agent_id"),
+                        "description": i18n.t("mcp.tools.hubUnregisterAgent.params.agentId"),
                     },
                 },
                 "required": ["agent_id"],
             },
         ),
         types.Tool(
-            name=_("tool.hub_dashboard_url.name"),
-            description=_("tool.hub_dashboard_url.desc"),
+            name="hub_dashboard_url",
+            description=i18n.t("mcp.tools.hubDashboardUrl.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
@@ -162,7 +163,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             if not auth.get("authenticated"):
                 return [types.TextContent(
                     type="text",
-                    text=json.dumps({"error": "Plane authentication failed", "details": auth}, indent=2, ensure_ascii=False),
+                    text=json.dumps({"error": i18n.t("errors.planeAuthFailed"), "details": auth}, indent=2, ensure_ascii=False),
                 )]
 
         ws_slug = arguments.get("workspace_slug")
@@ -235,12 +236,12 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             text=json.dumps({
                 "dashboard": None,
                 "running": False,
-                "hint": "Start server with --dashboard PORT to enable dashboard",
+                "hint": i18n.t("errors.dashboardNotRunning"),
             }, indent=2),
         )]
 
     else:
-        raise ValueError(_("error.unknown_tool", name=name))
+        raise ValueError(i18n.t("errors.unknownTool", name=name))
 
 
 # ── Optional Dashboard ──
@@ -252,7 +253,7 @@ def _safe_plane_status():
         "plane_url": plane.base_url,
         "connected": plane.token is not None,
         "workspaces": 0,
-        "note": _("plane.sync_note"),
+        "note": i18n.t("server.plane_sync_note"),
     }
 
 
@@ -265,14 +266,25 @@ def start_dashboard(port: int):
         from http.server import HTTPServer, BaseHTTPRequestHandler
 
         class DashboardHandler(BaseHTTPRequestHandler):
-            def _detect_lang(self):
-                """Detect language from Accept-Language header."""
-                header = self.headers.get("Accept-Language", "")
-                return detect_language_from_header(header)
-
             def do_GET(self):
-                lang = self._detect_lang()
-                if self.path == "/" or self.path == "/index.html":
+                # Parse query params for ?lang=xx
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                path_only = parsed.path
+
+                # Determine language: ?lang param > Accept-Language header > default de
+                lang = "de"
+                if "lang" in params:
+                    lang = params["lang"][0]
+                elif "Accept-Language" in self.headers:
+                    accepted = i18n.parse_accept_language(self.headers["Accept-Language"])
+                    available = i18n.get_manager().get_available_locales()
+                    for loc in accepted:
+                        if loc in available:
+                            lang = loc
+                            break
+
+                if path_only == "/" or path_only == "/index.html":
                     registry = get_registry()
                     agents = registry.get_status_all()
                     plane_status = _safe_plane_status()
@@ -288,7 +300,7 @@ def start_dashboard(port: int):
                     self.send_header("Content-Length", str(len(html.encode("utf-8"))))
                     self.end_headers()
                     self.wfile.write(html.encode("utf-8"))
-                elif self.path == "/api/status":
+                elif path_only == "/api/status":
                     registry = get_registry()
                     data = {
                         "agents": registry.get_status_all(),
@@ -305,30 +317,32 @@ def start_dashboard(port: int):
                     self.send_response(404)
                     self.end_headers()
 
-            def log_message(self, format, *args):
-                logger.debug(f"Dashboard: {format % args}")
-
         server = HTTPServer(("0.0.0.0", port), DashboardHandler)
-        logger.info(_("hub.start_dashboard", port=port))
+        logger.info(i18n.t("server.log.dashboard_started", port=port))
         server.serve_forever()
 
     except Exception as e:
-        logger.error(_("hub.dashboard_error", error=e))
+        logger.error(i18n.t("server.log.dashboard_start_failed", error=str(e)))
 
 
 # ── Main Entry Points ──
 
 async def run_mcp():
     """Run the MCP server over stdio."""
-    logger.info(_("hub.start_mcp"))
+    logger.info(i18n.t("server.log.mcp_starting"))
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ME4 Kommunikations-Hub MCP Server")
-    parser.add_argument("--dashboard", type=int, metavar="PORT", help="Dashboard auf angegebenem Port starten")
-    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help="NUR Dashboard starten (kein MCP)")
+    # Initialize i18n
+    locales_dir = Path(__file__).parent / "locales"
+    i18n.init(str(locales_dir), default_locale="de")
+    logger.info(f"i18n initialized: {i18n.get_manager().get_available_locales()} (default: {i18n.get_locale()})")
+
+    parser = argparse.ArgumentParser(description=i18n.t("server.argparse.description"))
+    parser.add_argument("--dashboard", type=int, metavar="PORT", help=i18n.t("server.argparse.dashboard_help"))
+    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help=i18n.t("server.argparse.dashboard_only_help"))
     args = parser.parse_args()
 
     if args.dashboard_only:
@@ -338,7 +352,7 @@ def main():
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info(_("hub.dashboard_stopped"))
+            logger.info(i18n.t("server.log.dashboard_stopped"))
         return
 
     if args.dashboard:

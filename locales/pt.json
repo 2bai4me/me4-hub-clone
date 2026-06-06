@@ -1,0 +1,122 @@
+{
+  "app": {
+    "name": "ME4 Hub de Comunicação",
+    "tagline": "Hermes CIO · Clones · PI-Agents · Status & Sync"
+  },
+  "dashboard": {
+    "title": "Status dos Agentes",
+    "refresh": "atualizado: {time} | atualização automática a cada 30s",
+    "agent_list": {
+      "empty": "Nenhum agente registrado",
+      "heartbeat_ago_seconds": "há {seconds}s",
+      "heartbeat_ago_minutes": "há {minutes}m",
+      "heartbeat_ago_hours": "há {hours}h",
+      "heartbeat_never": "nunca"
+    },
+    "stats": {
+      "total_registered": "Total registrado",
+      "online": "Online",
+      "offline": "Offline"
+    }
+  },
+  "plane": {
+    "title": "Plane Sync",
+    "url_label": "URL do Plane",
+    "connection": "Conexão",
+    "connected": "✅ Conectado",
+    "disconnected": "❌ Não conectado",
+    "workspaces": "Workspaces"
+  },
+  "system": {
+    "title": "Sistema",
+    "hub_version": "Versão do Hub",
+    "server_uptime": "Uptime do Servidor",
+    "mcp_transport": "Transporte MCP",
+    "dashboard_port": "Porta do Dashboard"
+  },
+  "agents": {
+    "count": "Nenhum agente",
+    "_plural": {
+      "count": {
+        "one": "{count} agente",
+        "other": "{count} agentes"
+      }
+    }
+  },
+  "status": {
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "busy": "OCUPADO",
+    "unknown": "DESCONHECIDO"
+  },
+  "agent": {
+    "heartbeat_label": "Heartbeat"
+  },
+  "mcp": {
+    "tools": {
+      "hubStatusAll": {
+        "description": "Mostra o status de todos os agentes registrados (Hermes CIO, Clones, PI-Agents) no Hub de Comunicação. Retorna status online/offline, tempos de heartbeat e tipos de agentes."
+      },
+      "hubSyncPlane": {
+        "description": "Sincroniza com o Plane (gerenciamento de projetos em localhost:8080). Autentica-se automaticamente e retorna workspaces, projetos e issues. Opcional: workspace_slug e project_id para consultas específicas.",
+        "params": {
+          "workspaceSlug": "Slug do workspace no Plane (ex: 'me4'). Deixe vazio para todos.",
+          "projectId": "ID do projeto no Plane para consulta de issues. Deixe vazio para visão geral.",
+          "state": "Filtro de estado das issues (ex: 'backlog', 'unstarted', 'started', 'completed', 'cancelled')."
+        }
+      },
+      "hubRegisterAgent": {
+        "description": "Registra um novo agente (Hermes Clone, PI-Agent, etc.) no Hub de Comunicação. Necessário antes de enviar heartbeats.",
+        "params": {
+          "agentId": "ID único do agente (ex: 'hermes-clone-1', 'pi-agent-researcher').",
+          "agentType": "Tipo: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+          "displayName": "Nome de exibição para o dashboard.",
+          "endpoint": "URL de acessibilidade ou caminho IPC (opcional).",
+          "capabilities": "Capacidades do agente (opcional)."
+        }
+      },
+      "hubHeartbeat": {
+        "description": "Envia um heartbeat para um agente registrado. Mantém o status como online. Deve ser chamado a cada 60-120 segundos.",
+        "params": {
+          "agentId": "ID do agente que está enviando o heartbeat."
+        }
+      },
+      "hubUnregisterAgent": {
+        "description": "Remove um agente da registry.",
+        "params": {
+          "agentId": "ID do agente a ser removido."
+        }
+      },
+      "hubDashboardUrl": {
+        "description": "Retorna a URL do dashboard de status, se estiver em execução."
+      }
+    }
+  },
+  "errors": {
+    "planeAuthFailed": "Autenticação do Plane falhou",
+    "unknownTool": "Ferramenta desconhecida: {name}",
+    "agentNotFound": "Agente não encontrado",
+    "unknownAgent": "Agente desconhecido",
+    "dashboardNotRunning": "Dashboard não está em execução. Inicie o servidor com --dashboard PORTA."
+  },
+  "server": {
+    "plane_sync_note": "Status de sincronização atualizado em segundo plano",
+    "argparse": {
+      "description": "Servidor MCP do Hub de Comunicação ME4",
+      "dashboard_help": "Iniciar dashboard na porta especificada",
+      "dashboard_only_help": "Iniciar APENAS o dashboard (sem MCP)"
+    },
+    "log": {
+      "dashboard_started": "Dashboard iniciado na porta {port}",
+      "dashboard_start_failed": "Falha ao iniciar o dashboard: {error}",
+      "mcp_starting": "Servidor MCP iniciando",
+      "dashboard_stopped": "Dashboard parado"
+    }
+  },
+  "hub": {
+    "log": {
+      "state_load_error": "Não foi possível carregar o arquivo de estado: {error}",
+      "agent_registered": "Agente registrado: {id} ({type})"
+    }
+  }
+}

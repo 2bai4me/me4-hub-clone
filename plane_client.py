@@ -7,6 +7,8 @@ from typing import Optional
 
 import httpx
 
+import me4_i18n as i18n
+
 logger = logging.getLogger("me4-hub.plane")
 
 DEFAULT_PLANE_URL = "http://localhost:8080"
@@ -139,7 +141,7 @@ class PlaneClient:
         if not self.token:
             auth = self.authenticate()
             if not auth.get("authenticated"):
-                result["error"] = auth.get("error", "Authentication failed")
+                result["error"] = auth.get("error", i18n.t("errors.planeAuthFailed"))
                 return result
 
         result["connected"] = True
