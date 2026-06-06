@@ -24,7 +24,6 @@ import me4_i18n as i18n
 from hub_core import get_registry, AgentInfo
 from plane_client import get_plane_client
 from dashboard import render_dashboard
-from i18n_helper import _, set_locale, parse_accept_language
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("me4-hub.server")

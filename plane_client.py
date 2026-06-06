@@ -7,7 +7,7 @@ from typing import Optional
 
 import httpx
 
-from i18n_helper import _
+import me4_i18n as i18n
 
 logger = logging.getLogger("me4-hub.plane")
 
@@ -141,7 +141,7 @@ class PlaneClient:
         if not self.token:
             auth = self.authenticate()
             if not auth.get("authenticated"):
-                result["error"] = auth.get("error", _("errors.auth_failed"))
+                result["error"] = auth.get("error", i18n.t("errors.planeAuthFailed"))
                 return result
 
         result["connected"] = True

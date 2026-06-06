@@ -9,9 +9,7 @@ import time
 import me4_i18n as i18n
 from pathlib import Path
 
-from i18n_helper import _
-
-DASHBOARD_TEMPLATE = """<!DOCTYPE html>
+DASHBOARD_TEMPLATE = """
 <html lang="{lang}">
 <head>
     <meta charset="UTF-8">
