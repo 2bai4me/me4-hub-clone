@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass, field, asdict
 
+import me4_i18n as i18n
+
 logger = logging.getLogger("me4-hub")
 
 STATE_FILE = Path(__file__).parent / "hub_state.json"
@@ -62,7 +64,7 @@ class HubRegistry:
             del self.agents[agent_id]
             self._save_state()
             return {"unregistered": True, "agent_id": agent_id}
-        return {"unregistered": False, "error": "Agent not found"}
+        return {"unregistered": False, "error": i18n.t("errors.agentNotFound")}
 
     def heartbeat(self, agent_id: str) -> dict:
         """Update heartbeat timestamp."""
@@ -71,7 +73,7 @@ class HubRegistry:
             self.agents[agent_id].status = "online"
             self._save_state()
             return {"heartbeat": "ok", "agent_id": agent_id}
-        return {"heartbeat": "error", "message": "Unknown agent"}
+        return {"heartbeat": "error", "message": i18n.t("errors.unknownAgent")}
 
     def get_status_all(self) -> dict:
         """Get status of all registered agents."""

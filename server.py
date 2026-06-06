@@ -14,11 +14,13 @@ import logging
 import argparse
 import threading
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 
+import me4_i18n as i18n
 from hub_core import get_registry, AgentInfo
 from plane_client import get_plane_client
 from dashboard import render_dashboard
@@ -42,7 +44,7 @@ async def list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="hub_status_all",
-            description="Zeigt den Status aller registrierten Agenten (Hermes CIO, Clones, PI-Agenten) im Kommunikations-Hub an. Gibt Online/Offline-Status, Heartbeat-Zeiten und Agent-Typen zurück.",
+            description=i18n.t("mcp.tools.hubStatusAll.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
@@ -50,51 +52,51 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_sync_plane",
-            description="Synchronisiert mit Plane (Projektmanagement auf localhost:8080). Authentifiziert sich automatisch und gibt Workspaces, Projekte und Issues zurück. Optional: workspace_slug und project_id für gezielte Abfragen.",
+            description=i18n.t("mcp.tools.hubSyncPlane.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "workspace_slug": {
                         "type": "string",
-                        "description": "Plane Workspace-Slug (z.B. 'me4'). Leer lassen für alle.",
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.workspaceSlug"),
                     },
                     "project_id": {
                         "type": "string",
-                        "description": "Plane Project-ID für Issue-Abfrage. Leer lassen für Übersicht.",
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.projectId"),
                     },
                     "state": {
                         "type": "string",
-                        "description": "Issue-Status filter (z.B. 'backlog', 'unstarted', 'started', 'completed', 'cancelled').",
+                        "description": i18n.t("mcp.tools.hubSyncPlane.params.state"),
                     },
                 },
             },
         ),
         types.Tool(
             name="hub_register_agent",
-            description="Registriert einen neuen Agenten (Hermes Clone, PI-Agent, etc.) im Kommunikations-Hub. Notwendig bevor Heartbeats gesendet werden können.",
+            description=i18n.t("mcp.tools.hubRegisterAgent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "Eindeutige ID des Agenten (z.B. 'hermes-clone-1', 'pi-agent-researcher').",
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.agentId"),
                     },
                     "agent_type": {
                         "type": "string",
-                        "description": "Typ: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.agentType"),
                     },
                     "display_name": {
                         "type": "string",
-                        "description": "Anzeigename fürs Dashboard.",
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.displayName"),
                     },
                     "endpoint": {
                         "type": "string",
-                        "description": "Erreichbarkeits-URL oder IPC-Pfad (optional).",
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.endpoint"),
                     },
                     "capabilities": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Fähigkeiten des Agenten (optional).",
+                        "description": i18n.t("mcp.tools.hubRegisterAgent.params.capabilities"),
                     },
                 },
                 "required": ["agent_id", "agent_type", "display_name"],
@@ -102,13 +104,13 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_heartbeat",
-            description="Sendet einen Heartbeat für einen registrierten Agenten. Hält den Status auf 'online'. Sollte alle 60-120 Sekunden aufgerufen werden.",
+            description=i18n.t("mcp.tools.hubHeartbeat.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "ID des Agenten, der den Heartbeat sendet.",
+                        "description": i18n.t("mcp.tools.hubHeartbeat.params.agentId"),
                     },
                 },
                 "required": ["agent_id"],
@@ -116,13 +118,13 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_unregister_agent",
-            description="Entfernt einen Agenten aus der Registry.",
+            description=i18n.t("mcp.tools.hubUnregisterAgent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "ID des zu entfernenden Agenten.",
+                        "description": i18n.t("mcp.tools.hubUnregisterAgent.params.agentId"),
                     },
                 },
                 "required": ["agent_id"],
@@ -130,7 +132,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_dashboard_url",
-            description="Gibt die URL des Status-Dashboards zurück, falls es läuft.",
+            description=i18n.t("mcp.tools.hubDashboardUrl.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
@@ -161,7 +163,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             if not auth.get("authenticated"):
                 return [types.TextContent(
                     type="text",
-                    text=json.dumps({"error": "Plane authentication failed", "details": auth}, indent=2, ensure_ascii=False),
+                    text=json.dumps({"error": i18n.t("errors.planeAuthFailed"), "details": auth}, indent=2, ensure_ascii=False),
                 )]
 
         ws_slug = arguments.get("workspace_slug")
@@ -234,12 +236,12 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             text=json.dumps({
                 "dashboard": None,
                 "running": False,
-                "hint": "Start server with --dashboard PORT to enable dashboard",
+                "hint": i18n.t("errors.dashboardNotRunning"),
             }, indent=2),
         )]
 
     else:
-        raise ValueError(f"Unknown tool: {name}")
+        raise ValueError(i18n.t("errors.unknownTool", name=name))
 
 
 # ── Optional Dashboard ──
@@ -265,7 +267,24 @@ def start_dashboard(port: int):
 
         class DashboardHandler(BaseHTTPRequestHandler):
             def do_GET(self):
-                if self.path == "/" or self.path == "/index.html":
+                # Parse query params for ?lang=xx
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                path_only = parsed.path
+
+                # Determine language: ?lang param > Accept-Language header > default de
+                lang = "de"
+                if "lang" in params:
+                    lang = params["lang"][0]
+                elif "Accept-Language" in self.headers:
+                    accepted = i18n.parse_accept_language(self.headers["Accept-Language"])
+                    available = i18n.get_manager().get_available_locales()
+                    for loc in accepted:
+                        if loc in available:
+                            lang = loc
+                            break
+
+                if path_only == "/" or path_only == "/index.html":
                     registry = get_registry()
                     agents = registry.get_status_all()
                     plane_status = _safe_plane_status()
@@ -274,13 +293,14 @@ def start_dashboard(port: int):
                         plane_data=plane_status,
                         uptime_seconds=time.time() - start_time,
                         dashboard_port=port,
+                        lang=lang,
                     )
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
                     self.send_header("Content-Length", str(len(html.encode("utf-8"))))
                     self.end_headers()
                     self.wfile.write(html.encode("utf-8"))
-                elif self.path == "/api/status":
+                elif path_only == "/api/status":
                     registry = get_registry()
                     data = {
                         "agents": registry.get_status_all(),
@@ -318,6 +338,11 @@ async def run_mcp():
 
 
 def main():
+    # Initialize i18n
+    locales_dir = Path(__file__).parent / "locales"
+    i18n.init(str(locales_dir), default_locale="de")
+    logger.info(f"i18n initialized: {i18n.get_manager().get_available_locales()} (default: {i18n.get_locale()})")
+
     parser = argparse.ArgumentParser(description="ME4 Kommunikations-Hub MCP Server")
     parser.add_argument("--dashboard", type=int, metavar="PORT", help="Dashboard auf angegebenem Port starten")
     parser.add_argument("--dashboard-only", type=int, metavar="PORT", help="NUR Dashboard starten (kein MCP)")

@@ -1,0 +1,102 @@
+{
+  "app": {
+    "name": "ME4 Kommunikations-Hub",
+    "tagline": "Hermes CIO · Clones · PI-Agenten · Status & Sync"
+  },
+  "dashboard": {
+    "title": "Agenten Status",
+    "refresh": "aktualisiert: {time} | auto-refresh alle 30s",
+    "agent_list": {
+      "empty": "Keine Agenten registriert",
+      "heartbeat_ago_seconds": "vor {seconds}s",
+      "heartbeat_ago_minutes": "vor {minutes}m",
+      "heartbeat_ago_hours": "vor {hours}h",
+      "heartbeat_never": "nie"
+    },
+    "stats": {
+      "total_registered": "Gesamt registriert",
+      "online": "Online",
+      "offline": "Offline"
+    }
+  },
+  "plane": {
+    "title": "Plane Sync",
+    "url_label": "Plane URL",
+    "connection": "Verbindung",
+    "connected": "✅ Verbunden",
+    "disconnected": "❌ Nicht verbunden",
+    "workspaces": "Workspaces"
+  },
+  "system": {
+    "title": "System",
+    "hub_version": "Hub Version",
+    "server_uptime": "Server Uptime",
+    "mcp_transport": "MCP Transport",
+    "dashboard_port": "Dashboard Port"
+  },
+  "agents": {
+    "count": "Keine Agenten",
+    "_plural": {
+      "count": {
+        "one": "{count} Agent",
+        "other": "{count} Agenten"
+      }
+    }
+  },
+  "status": {
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "busy": "BUSY",
+    "unknown": "UNBEKANNT"
+  },
+  "agent": {
+    "heartbeat_label": "Heartbeat"
+  },
+  "mcp": {
+    "tools": {
+      "hubStatusAll": {
+        "description": "Zeigt den Status aller registrierten Agenten (Hermes CIO, Clones, PI-Agenten) im Kommunikations-Hub an. Gibt Online/Offline-Status, Heartbeat-Zeiten und Agent-Typen zurück."
+      },
+      "hubSyncPlane": {
+        "description": "Synchronisiert mit Plane (Projektmanagement auf localhost:8080). Authentifiziert sich automatisch und gibt Workspaces, Projekte und Issues zurück. Optional: workspace_slug und project_id für gezielte Abfragen.",
+        "params": {
+          "workspaceSlug": "Plane Workspace-Slug (z.B. 'me4'). Leer lassen für alle.",
+          "projectId": "Plane Project-ID für Issue-Abfrage. Leer lassen für Übersicht.",
+          "state": "Issue-Status filter (z.B. 'backlog', 'unstarted', 'started', 'completed', 'cancelled')."
+        }
+      },
+      "hubRegisterAgent": {
+        "description": "Registriert einen neuen Agenten (Hermes Clone, PI-Agent, etc.) im Kommunikations-Hub. Notwendig bevor Heartbeats gesendet werden können.",
+        "params": {
+          "agentId": "Eindeutige ID des Agenten (z.B. 'hermes-clone-1', 'pi-agent-researcher').",
+          "agentType": "Typ: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+          "displayName": "Anzeigename fürs Dashboard.",
+          "endpoint": "Erreichbarkeits-URL oder IPC-Pfad (optional).",
+          "capabilities": "Fähigkeiten des Agenten (optional)."
+        }
+      },
+      "hubHeartbeat": {
+        "description": "Sendet einen Heartbeat für einen registrierten Agenten. Hält den Status auf 'online'. Sollte alle 60-120 Sekunden aufgerufen werden.",
+        "params": {
+          "agentId": "ID des Agenten, der den Heartbeat sendet."
+        }
+      },
+      "hubUnregisterAgent": {
+        "description": "Entfernt einen Agenten aus der Registry.",
+        "params": {
+          "agentId": "ID des zu entfernenden Agenten."
+        }
+      },
+      "hubDashboardUrl": {
+        "description": "Gibt die URL des Status-Dashboards zurück, falls es läuft."
+      }
+    }
+  },
+  "errors": {
+    "planeAuthFailed": "Plane-Authentifizierung fehlgeschlagen",
+    "unknownTool": "Unbekanntes Tool: {name}",
+    "agentNotFound": "Agent nicht gefunden",
+    "unknownAgent": "Unbekannter Agent",
+    "dashboardNotRunning": "Dashboard läuft nicht. Server mit --dashboard PORT starten."
+  }
+}

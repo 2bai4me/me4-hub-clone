@@ -1,0 +1,55 @@
+{
+  "app": {
+    "name": "ME4 Communication Hub",
+    "tagline": "Hermes CIO · Clones · PI-Agents · Status & Sync"
+  },
+  "dashboard": {
+    "title": "Status dos Agentes",
+    "refresh": "atualizado: {time} | atualização automática a cada 30s",
+    "agent_list": {
+      "empty": "Nenhum agente registrado",
+      "heartbeat_ago_seconds": "há {seconds}s",
+      "heartbeat_ago_minutes": "há {minutes}m",
+      "heartbeat_ago_hours": "há {hours}h",
+      "heartbeat_never": "nunca"
+    },
+    "stats": {
+      "total_registered": "Total registrado",
+      "online": "Online",
+      "offline": "Offline"
+    }
+  },
+  "plane": {
+    "title": "Plane Sync",
+    "url_label": "URL do Plane",
+    "connection": "Conexão",
+    "connected": "✅ Conectado",
+    "disconnected": "❌ Não conectado",
+    "workspaces": "Workspaces"
+  },
+  "system": {
+    "title": "Sistema",
+    "hub_version": "Versão do Hub",
+    "server_uptime": "Uptime do Servidor",
+    "mcp_transport": "Transporte MCP",
+    "dashboard_port": "Porta do Dashboard"
+  },
+  "agents": {
+    "count": "Nenhum agente",
+    "_plural": {
+      "count": {
+        "one": "{count} agente",
+        "other": "{count} agentes"
+      }
+    }
+  },
+  "status": {
+    "online": "ONLINE",
+    "offline": "OFFLINE",
+    "busy": "OCUPADO",
+    "unknown": "DESCONHECIDO"
+  },
+  "agent": {
+    "heartbeat_label": "Heartbeat"
+  }
+}
