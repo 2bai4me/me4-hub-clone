@@ -22,6 +22,7 @@ import mcp.types as types
 from hub_core import get_registry, AgentInfo
 from plane_client import get_plane_client
 from dashboard import render_dashboard
+from i18n_helper import _, set_locale, parse_accept_language
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("me4-hub.server")
@@ -42,7 +43,7 @@ async def list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="hub_status_all",
-            description="Zeigt den Status aller registrierten Agenten (Hermes CIO, Clones, PI-Agenten) im Kommunikations-Hub an. Gibt Online/Offline-Status, Heartbeat-Zeiten und Agent-Typen zurück.",
+            description=_("tools.hub_status_all.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
@@ -50,51 +51,51 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_sync_plane",
-            description="Synchronisiert mit Plane (Projektmanagement auf localhost:8080). Authentifiziert sich automatisch und gibt Workspaces, Projekte und Issues zurück. Optional: workspace_slug und project_id für gezielte Abfragen.",
+            description=_("tools.hub_sync_plane.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "workspace_slug": {
                         "type": "string",
-                        "description": "Plane Workspace-Slug (z.B. 'me4'). Leer lassen für alle.",
+                        "description": _("params.workspace_slug"),
                     },
                     "project_id": {
                         "type": "string",
-                        "description": "Plane Project-ID für Issue-Abfrage. Leer lassen für Übersicht.",
+                        "description": _("params.project_id"),
                     },
                     "state": {
                         "type": "string",
-                        "description": "Issue-Status filter (z.B. 'backlog', 'unstarted', 'started', 'completed', 'cancelled').",
+                        "description": _("params.state"),
                     },
                 },
             },
         ),
         types.Tool(
             name="hub_register_agent",
-            description="Registriert einen neuen Agenten (Hermes Clone, PI-Agent, etc.) im Kommunikations-Hub. Notwendig bevor Heartbeats gesendet werden können.",
+            description=_("tools.hub_register_agent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "Eindeutige ID des Agenten (z.B. 'hermes-clone-1', 'pi-agent-researcher').",
+                        "description": _("params.agent_id_register"),
                     },
                     "agent_type": {
                         "type": "string",
-                        "description": "Typ: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+                        "description": _("params.agent_type"),
                     },
                     "display_name": {
                         "type": "string",
-                        "description": "Anzeigename fürs Dashboard.",
+                        "description": _("params.display_name"),
                     },
                     "endpoint": {
                         "type": "string",
-                        "description": "Erreichbarkeits-URL oder IPC-Pfad (optional).",
+                        "description": _("params.endpoint"),
                     },
                     "capabilities": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Fähigkeiten des Agenten (optional).",
+                        "description": _("params.capabilities"),
                     },
                 },
                 "required": ["agent_id", "agent_type", "display_name"],
@@ -102,13 +103,13 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_heartbeat",
-            description="Sendet einen Heartbeat für einen registrierten Agenten. Hält den Status auf 'online'. Sollte alle 60-120 Sekunden aufgerufen werden.",
+            description=_("tools.hub_heartbeat.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "ID des Agenten, der den Heartbeat sendet.",
+                        "description": _("params.agent_id_heartbeat"),
                     },
                 },
                 "required": ["agent_id"],
@@ -116,13 +117,13 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_unregister_agent",
-            description="Entfernt einen Agenten aus der Registry.",
+            description=_("tools.hub_unregister_agent.description"),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "ID des zu entfernenden Agenten.",
+                        "description": _("params.agent_id_unregister"),
                     },
                 },
                 "required": ["agent_id"],
@@ -130,7 +131,7 @@ async def list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="hub_dashboard_url",
-            description="Gibt die URL des Status-Dashboards zurück, falls es läuft.",
+            description=_("tools.hub_dashboard_url.description"),
             inputSchema={
                 "type": "object",
                 "properties": {},
@@ -161,7 +162,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             if not auth.get("authenticated"):
                 return [types.TextContent(
                     type="text",
-                    text=json.dumps({"error": "Plane authentication failed", "details": auth}, indent=2, ensure_ascii=False),
+                    text=json.dumps({"error": _("errors.plane_auth_failed"), "details": auth}, indent=2, ensure_ascii=False),
                 )]
 
         ws_slug = arguments.get("workspace_slug")
@@ -234,12 +235,12 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             text=json.dumps({
                 "dashboard": None,
                 "running": False,
-                "hint": "Start server with --dashboard PORT to enable dashboard",
+                "hint": _("server.dashboard_hint"),
             }, indent=2),
         )]
 
     else:
-        raise ValueError(f"Unknown tool: {name}")
+        raise ValueError(_("errors.unknown_tool", name=name))
 
 
 # ── Optional Dashboard ──
@@ -251,7 +252,7 @@ def _safe_plane_status():
         "plane_url": plane.base_url,
         "connected": plane.token is not None,
         "workspaces": 0,
-        "note": "Plane sync verfuegbar via MCP-Tool hub_sync_plane()",
+        "note": _("server.plane_sync_note"),
     }
 
 
@@ -265,6 +266,10 @@ def start_dashboard(port: int):
 
         class DashboardHandler(BaseHTTPRequestHandler):
             def do_GET(self):
+                # Set locale from Accept-Language header
+                accept_lang = self.headers.get("Accept-Language")
+                set_locale(parse_accept_language(accept_lang))
+
                 if self.path == "/" or self.path == "/index.html":
                     registry = get_registry()
                     agents = registry.get_status_all()
@@ -297,30 +302,27 @@ def start_dashboard(port: int):
                     self.send_response(404)
                     self.end_headers()
 
-            def log_message(self, format, *args):
-                logger.debug(f"Dashboard: {format % args}")
-
         server = HTTPServer(("0.0.0.0", port), DashboardHandler)
-        logger.info(f"📊 Dashboard gestartet auf http://localhost:{port}")
+        logger.info(_("server.dashboard_started", port=port))
         server.serve_forever()
 
     except Exception as e:
-        logger.error(f"Dashboard konnte nicht gestartet werden: {e}")
+        logger.error(_("server.dashboard_start_failed", error=str(e)))
 
 
 # ── Main Entry Points ──
 
 async def run_mcp():
     """Run the MCP server over stdio."""
-    logger.info("🚀 ME4 Kommunikations-Hub MCP Server startet (stdio)")
+    logger.info(_("server.mcp_starting"))
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ME4 Kommunikations-Hub MCP Server")
-    parser.add_argument("--dashboard", type=int, metavar="PORT", help="Dashboard auf angegebenem Port starten")
-    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help="NUR Dashboard starten (kein MCP)")
+    parser = argparse.ArgumentParser(description=_("server.arg_description"))
+    parser.add_argument("--dashboard", type=int, metavar="PORT", help=_("server.arg_dashboard"))
+    parser.add_argument("--dashboard-only", type=int, metavar="PORT", help=_("server.arg_dashboard_only"))
     args = parser.parse_args()
 
     if args.dashboard_only:
@@ -330,7 +332,7 @@ def main():
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            logger.info("Dashboard gestoppt.")
+            logger.info(_("server.dashboard_stopped"))
         return
 
     if args.dashboard:

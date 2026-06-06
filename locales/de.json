@@ -1,0 +1,81 @@
+{
+    "tools": {
+        "hub_status_all": {
+            "description": "Zeigt den Status aller registrierten Agenten (Hermes CIO, Clones, PI-Agenten) im Kommunikations-Hub an. Gibt Online/Offline-Status, Heartbeat-Zeiten und Agent-Typen zurück."
+        },
+        "hub_sync_plane": {
+            "description": "Synchronisiert mit Plane (Projektmanagement auf localhost:8080). Authentifiziert sich automatisch und gibt Workspaces, Projekte und Issues zurück. Optional: workspace_slug und project_id für gezielte Abfragen."
+        },
+        "hub_register_agent": {
+            "description": "Registriert einen neuen Agenten (Hermes Clone, PI-Agent, etc.) im Kommunikations-Hub. Notwendig bevor Heartbeats gesendet werden können."
+        },
+        "hub_heartbeat": {
+            "description": "Sendet einen Heartbeat für einen registrierten Agenten. Hält den Status auf 'online'. Sollte alle 60-120 Sekunden aufgerufen werden."
+        },
+        "hub_unregister_agent": {
+            "description": "Entfernt einen Agenten aus der Registry."
+        },
+        "hub_dashboard_url": {
+            "description": "Gibt die URL des Status-Dashboards zurück, falls es läuft."
+        }
+    },
+    "params": {
+        "workspace_slug": "Plane Workspace-Slug (z.B. 'me4'). Leer lassen für alle.",
+        "project_id": "Plane Project-ID für Issue-Abfrage. Leer lassen für Übersicht.",
+        "state": "Issue-Status filter (z.B. 'backlog', 'unstarted', 'started', 'completed', 'cancelled').",
+        "agent_id_register": "Eindeutige ID des Agenten (z.B. 'hermes-clone-1', 'pi-agent-researcher').",
+        "agent_type": "Typ: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+        "display_name": "Anzeigename fürs Dashboard.",
+        "endpoint": "Erreichbarkeits-URL oder IPC-Pfad (optional).",
+        "capabilities": "Fähigkeiten des Agenten (optional).",
+        "agent_id_heartbeat": "ID des Agenten, der den Heartbeat sendet.",
+        "agent_id_unregister": "ID des zu entfernenden Agenten."
+    },
+    "errors": {
+        "plane_auth_failed": "Plane-Authentifizierung fehlgeschlagen",
+        "unknown_tool": "Unbekanntes Tool: {name}",
+        "agent_not_found": "Agent nicht gefunden",
+        "unknown_agent": "Unbekannter Agent",
+        "auth_failed": "Authentifizierung fehlgeschlagen"
+    },
+    "server": {
+        "dashboard_started": "📊 Dashboard gestartet auf http://localhost:{port}",
+        "dashboard_start_failed": "Dashboard konnte nicht gestartet werden: {error}",
+        "mcp_starting": "🚀 ME4 Kommunikations-Hub MCP Server startet (stdio)",
+        "dashboard_stopped": "Dashboard gestoppt.",
+        "dashboard_hint": "Server mit --dashboard PORT starten, um Dashboard zu aktivieren",
+        "arg_description": "ME4 Kommunikations-Hub MCP Server",
+        "arg_dashboard": "Dashboard auf angegebenem Port starten",
+        "arg_dashboard_only": "NUR Dashboard starten (kein MCP)",
+        "plane_sync_note": "Plane-Sync verfügbar via MCP-Tool hub_sync_plane()"
+    },
+    "dashboard": {
+        "title": "ME4 Kommunikations-Hub",
+        "subtitle": "Hermes CIO · Clones · PI-Agenten · Status & Sync",
+        "refresh_label": "aktualisiert",
+        "auto_refresh": "auto-refresh alle 30s",
+        "agents_title": "🤖 Agenten Status",
+        "total_registered": "Gesamt registriert",
+        "online": "Online",
+        "offline": "Offline",
+        "no_agents": "Keine Agenten registriert",
+        "heartbeat_label": "Heartbeat",
+        "plane_title": "📋 Plane Sync",
+        "plane_url": "Plane URL",
+        "connection": "Verbindung",
+        "connected": "✅ Verbunden",
+        "not_connected": "❌ Nicht verbunden",
+        "workspaces": "Workspaces",
+        "system_title": "⚙️ System",
+        "hub_version": "Hub Version",
+        "server_uptime": "Server Uptime",
+        "mcp_transport": "MCP Transport",
+        "dashboard_port": "Dashboard Port"
+    },
+    "relative_time": {
+        "seconds_ago": "vor {n}s",
+        "minutes_ago": "vor {n}m",
+        "hours_ago": "vor {n}h",
+        "never": "nie"
+    }
+}

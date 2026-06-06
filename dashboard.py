@@ -7,12 +7,14 @@ import json
 import time
 from pathlib import Path
 
+from i18n_helper import _
+
 DASHBOARD_TEMPLATE = """<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ME4 Kommunikations-Hub</title>
+    <title>{{ title }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }
@@ -53,25 +55,25 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="header">
-        <h1>🛰️ ME4 Kommunikations-Hub</h1>
-        <p>Hermes CIO · Clones · PI-Agenten · Status & Sync</p>
-        <div class="refresh">aktualisiert: <span id="refreshTime">{{ refresh_time }}</span> | auto-refresh alle 30s</div>
+        <h1>🛰️ {{ header_title }}</h1>
+        <p>{{ subtitle }}</p>
+        <div class="refresh">{{ refresh_label }}: <span id="refreshTime">{{ refresh_time }}</span> | {{ auto_refresh }}</div>
     </div>
 
     <div class="grid">
         <!-- Agent Status Card -->
         <div class="card">
-            <h2>🤖 Agenten Status</h2>
+            <h2>{{ agents_title }}</h2>
             <div class="stat-row">
-                <span class="stat-label">Gesamt registriert</span>
+                <span class="stat-label">{{ total_registered }}</span>
                 <span class="stat-value">{{ total_agents }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Online</span>
+                <span class="stat-label">{{ online_label }}</span>
                 <span class="stat-value online">{{ online_count }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Offline</span>
+                <span class="stat-label">{{ offline_label }}</span>
                 <span class="stat-value offline">{{ offline_count }}</span>
             </div>
             <div style="margin-top: 16px;">
@@ -81,17 +83,17 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
 
         <!-- Plane Sync Card -->
         <div class="card">
-            <h2>📋 Plane Sync</h2>
+            <h2>{{ plane_title }}</h2>
             <div class="stat-row">
-                <span class="stat-label">Plane URL</span>
+                <span class="stat-label">{{ plane_url_label }}</span>
                 <span class="stat-value">{{ plane_url }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Verbindung</span>
+                <span class="stat-label">{{ connection_label }}</span>
                 <span class="stat-value {{ plane_connected_class }}">{{ plane_connected_text }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Workspaces</span>
+                <span class="stat-label">{{ workspaces_label }}</span>
                 <span class="stat-value">{{ plane_workspaces }}</span>
             </div>
             {{ plane_projects_html }}
@@ -99,21 +101,21 @@ DASHBOARD_TEMPLATE = """<!DOCTYPE html>
 
         <!-- System Card -->
         <div class="card">
-            <h2>⚙️ System</h2>
+            <h2>{{ system_title }}</h2>
             <div class="stat-row">
-                <span class="stat-label">Hub Version</span>
+                <span class="stat-label">{{ hub_version_label }}</span>
                 <span class="stat-value">1.0.0</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Server Uptime</span>
+                <span class="stat-label">{{ server_uptime_label }}</span>
                 <span class="stat-value">{{ uptime }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">MCP Transport</span>
+                <span class="stat-label">{{ mcp_transport_label }}</span>
                 <span class="stat-value">stdio</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Dashboard Port</span>
+                <span class="stat-label">{{ dashboard_port_label }}</span>
                 <span class="stat-value">{{ dashboard_port }}</span>
             </div>
         </div>
@@ -138,21 +140,22 @@ def render_dashboard(
     agent_cards = ""
     agents = agents_data.get("agents", [])
     if not agents:
-        agent_cards = '<p style="color:#8b949e; text-align:center; padding:20px;">Keine Agenten registriert</p>'
+        agent_cards = f'<p style="color:#8b949e; text-align:center; padding:20px;">{_("dashboard.no_agents")}</p>'
     else:
+        heartbeat_label = _("dashboard.heartbeat_label")
         for a in agents:
             status = a.get("status", "unknown")
             badge_class = f"badge-{status}"
             heartbeat = a.get("seconds_since_heartbeat")
             if heartbeat is not None:
                 if heartbeat < 60:
-                    ago = f"vor {int(heartbeat)}s"
+                    ago = _("relative_time.seconds_ago", n=int(heartbeat))
                 elif heartbeat < 3600:
-                    ago = f"vor {int(heartbeat/60)}m"
+                    ago = _("relative_time.minutes_ago", n=int(heartbeat / 60))
                 else:
-                    ago = f"vor {int(heartbeat/3600)}h"
+                    ago = _("relative_time.hours_ago", n=int(heartbeat / 3600))
             else:
-                ago = "nie"
+                ago = _("relative_time.never")
 
             agent_cards += f"""
             <div class="agent-card">
@@ -162,14 +165,14 @@ def render_dashboard(
                 </div>
                 <div class="agent-meta">
                     <span>{a.get('agent_type', '?')}</span>
-                    <span>Heartbeat: {ago}</span>
+                    <span>{heartbeat_label}: {ago}</span>
                 </div>
             </div>"""
 
     # Plane section
     plane_connected = plane_data.get("connected", False)
     plane_connected_class = "online" if plane_connected else "offline"
-    plane_connected_text = "✅ Verbunden" if plane_connected else "❌ Nicht verbunden"
+    plane_connected_text = _("dashboard.connected") if plane_connected else _("dashboard.not_connected")
     plane_url = plane_data.get("plane_url", "N/A")
     plane_workspaces = plane_data.get("workspaces", "0")
 
@@ -190,17 +193,35 @@ def render_dashboard(
     uptime_str = f"{h}h {m}m {s}s"
 
     html = DASHBOARD_TEMPLATE
+    html = html.replace("{{ title }}", _("dashboard.title"))
+    html = html.replace("{{ header_title }}", _("dashboard.title"))
+    html = html.replace("{{ subtitle }}", _("dashboard.subtitle"))
+    html = html.replace("{{ refresh_label }}", _("dashboard.refresh_label"))
+    html = html.replace("{{ auto_refresh }}", _("dashboard.auto_refresh"))
     html = html.replace("{{ refresh_time }}", time.strftime("%H:%M:%S"))
     html = html.replace("{{ total_agents }}", str(agents_data.get("total", 0)))
     html = html.replace("{{ online_count }}", str(agents_data.get("online", 0)))
     html = html.replace("{{ offline_count }}", str(agents_data.get("offline", 0)))
+    html = html.replace("{{ agents_title }}", _("dashboard.agents_title"))
+    html = html.replace("{{ total_registered }}", _("dashboard.total_registered"))
+    html = html.replace("{{ online_label }}", _("dashboard.online"))
+    html = html.replace("{{ offline_label }}", _("dashboard.offline"))
     html = html.replace("{{ agent_cards }}", agent_cards)
     html = html.replace("{{ plane_url }}", plane_url)
+    html = html.replace("{{ plane_url_label }}", _("dashboard.plane_url"))
+    html = html.replace("{{ connection_label }}", _("dashboard.connection"))
     html = html.replace("{{ plane_connected_class }}", plane_connected_class)
     html = html.replace("{{ plane_connected_text }}", plane_connected_text)
     html = html.replace("{{ plane_workspaces }}", str(plane_workspaces))
+    html = html.replace("{{ workspaces_label }}", _("dashboard.workspaces"))
+    html = html.replace("{{ plane_title }}", _("dashboard.plane_title"))
     html = html.replace("{{ plane_projects_html }}", plane_projects_html)
     html = html.replace("{{ uptime }}", uptime_str)
+    html = html.replace("{{ system_title }}", _("dashboard.system_title"))
+    html = html.replace("{{ hub_version_label }}", _("dashboard.hub_version"))
+    html = html.replace("{{ server_uptime_label }}", _("dashboard.server_uptime"))
+    html = html.replace("{{ mcp_transport_label }}", _("dashboard.mcp_transport"))
+    html = html.replace("{{ dashboard_port_label }}", _("dashboard.dashboard_port"))
     html = html.replace("{{ dashboard_port }}", str(dashboard_port))
 
     return html

@@ -1,0 +1,81 @@
+{
+    "tools": {
+        "hub_status_all": {
+            "description": "Shows the status of all registered agents (Hermes CIO, Clones, PI agents) in the communication hub. Returns online/offline status, heartbeat times, and agent types."
+        },
+        "hub_sync_plane": {
+            "description": "Synchronizes with Plane (project management on localhost:8080). Auto-authenticates and returns workspaces, projects, and issues. Optional: workspace_slug and project_id for targeted queries."
+        },
+        "hub_register_agent": {
+            "description": "Registers a new agent (Hermes Clone, PI agent, etc.) in the communication hub. Required before heartbeats can be sent."
+        },
+        "hub_heartbeat": {
+            "description": "Sends a heartbeat for a registered agent. Keeps the status at 'online'. Should be called every 60-120 seconds."
+        },
+        "hub_unregister_agent": {
+            "description": "Removes an agent from the registry."
+        },
+        "hub_dashboard_url": {
+            "description": "Returns the URL of the status dashboard, if it is running."
+        }
+    },
+    "params": {
+        "workspace_slug": "Plane workspace slug (e.g. 'me4'). Leave empty for all.",
+        "project_id": "Plane project ID for issue queries. Leave empty for overview.",
+        "state": "Issue status filter (e.g. 'backlog', 'unstarted', 'started', 'completed', 'cancelled').",
+        "agent_id_register": "Unique ID of the agent (e.g. 'hermes-clone-1', 'pi-agent-researcher').",
+        "agent_type": "Type: 'hermes-cio', 'hermes-clone', 'pi-agent', 'mcp-server'.",
+        "display_name": "Display name for the dashboard.",
+        "endpoint": "Reachability URL or IPC path (optional).",
+        "capabilities": "Agent capabilities (optional).",
+        "agent_id_heartbeat": "ID of the agent sending the heartbeat.",
+        "agent_id_unregister": "ID of the agent to remove."
+    },
+    "errors": {
+        "plane_auth_failed": "Plane authentication failed",
+        "unknown_tool": "Unknown tool: {name}",
+        "agent_not_found": "Agent not found",
+        "unknown_agent": "Unknown agent",
+        "auth_failed": "Authentication failed"
+    },
+    "server": {
+        "dashboard_started": "📊 Dashboard started at http://localhost:{port}",
+        "dashboard_start_failed": "Dashboard could not be started: {error}",
+        "mcp_starting": "🚀 ME4 Communication Hub MCP Server starting (stdio)",
+        "dashboard_stopped": "Dashboard stopped.",
+        "dashboard_hint": "Start server with --dashboard PORT to enable the dashboard",
+        "arg_description": "ME4 Communication Hub MCP Server",
+        "arg_dashboard": "Start dashboard on the specified port",
+        "arg_dashboard_only": "Start ONLY the dashboard (no MCP)",
+        "plane_sync_note": "Plane sync available via MCP tool hub_sync_plane()"
+    },
+    "dashboard": {
+        "title": "ME4 Communication Hub",
+        "subtitle": "Hermes CIO · Clones · PI Agents · Status & Sync",
+        "refresh_label": "updated",
+        "auto_refresh": "auto-refresh every 30s",
+        "agents_title": "🤖 Agent Status",
+        "total_registered": "Total registered",
+        "online": "Online",
+        "offline": "Offline",
+        "no_agents": "No agents registered",
+        "heartbeat_label": "Heartbeat",
+        "plane_title": "📋 Plane Sync",
+        "plane_url": "Plane URL",
+        "connection": "Connection",
+        "connected": "✅ Connected",
+        "not_connected": "❌ Not connected",
+        "workspaces": "Workspaces",
+        "system_title": "⚙️ System",
+        "hub_version": "Hub Version",
+        "server_uptime": "Server Uptime",
+        "mcp_transport": "MCP Transport",
+        "dashboard_port": "Dashboard Port"
+    },
+    "relative_time": {
+        "seconds_ago": "{n}s ago",
+        "minutes_ago": "{n}m ago",
+        "hours_ago": "{n}h ago",
+        "never": "never"
+    }
+}
